@@ -19,12 +19,19 @@ the language.
 
 The reference for layer 1 is
 [digitdisk](https://github.com/digitable-lol/digitdisk),
-`host/internal/ui/theme.go` and `term.go`. Diffed over a grid; the numbers
-below are run output.
+`host/internal/ui/theme.go` and `term.go`. It **was** diffed over a grid of 402
+inputs, once, and the reference's answers now live here as examples. The diff
+itself is over; that is said in full below, with the commit the differ can be
+fetched from.
+
+**There is no second language in this tree.** Not Go, not Python, not
+JavaScript, and no `Makefile` either: the entry point is `./ярлык` — 112 lines
+of `sh`, 56 of them code — over a list that is itself a flang program.
 
 The source is written in flang, whose surface is Russian. File names are
 English, module names are English, the prose inside is Russian — the language's
-own convention.
+own convention. Two names are Cyrillic on purpose, `ярлык` and `ярлыки.flang`,
+taken from the language's own tree: `./ярлык проверка` is what a person types.
 
 ---
 
@@ -56,7 +63,9 @@ $ flang emit flang/read-env.flang --target js   --out /tmp/x   → 2 files emitt
 ```
 
 Exit codes: layer 1 emits to go and to c with **0** (eight runs in a row — the
-six modules of the sibling repository and «Env» here); the plan exits **1**.
+six modules of the sibling repository and «Env» here); the refused targets exit
+**1**, and `js`, which does emit the plan, exits **3** — "printed, but not
+everything was judged". All four codes are asserted by `./ярлык граница`.
 
 Two conclusions, both load-bearing.
 
@@ -130,10 +139,10 @@ by empty output. This matters: `NO_COLOR` acts by its mere presence
 Plus the string plumbing without which none of it can be written: whitespace
 trimming, ASCII lowercasing, splitting on a character.
 
-`tools/sverka/` is the differ: a script plus one Go file that get dropped into a
-disposable clone of digitdisk. It is the only hand-written Go in the tree, and
-it is here so that anybody, not only their author, can re-check the numbers in
-this README.
+`tools/sverka/` is **gone**, and with it the last hand-written Go in the tree.
+It was a differ — a script plus one Go file dropped into a disposable clone of
+digitdisk — and it did its job: 402 inputs here, 0 divergences. What it guarded
+now lives here, as examples: see *The diff: what it proved, and where it went*.
 
 **A variable is a sum, not a string.** `вариант «Задано» с значение равным …`
 against `вариант «Не задано»`: an empty string and an absent variable are
@@ -145,12 +154,31 @@ different things, and the type knows it. `NO_COLOR` is exactly why.
 brew install flang        # or: asdf plugin add flang
 # or from a clone of the language:  make -C bootstrap
 ```
+There is no `make` here any more:
 
 ```sh
-make проверка   # flang check + flang test
-make печать     # emit layer 1 to Go and C, build both
-make план       # check the plan and run it through flang io
-make лицензии   # the licence guard
+./ярлык             # the list of shortcuts, read out of ярлыки.flang
+./ярлык проверка    # flang check + flang test: both layers, guard, shortcuts
+./ярлык ведомость   # the proof ledger for layer 1
+./ярлык отказ       # the plan has no ledger, and the binary says so with code 2
+./ярлык печать      # emit layer 1 to Go and C, build both
+./ярлык граница     # go/c/rust refuse to emit the plan; js emits it
+./ярлык план        # check the plan and run it through flang io
+./ярлык лицензии    # the licence guard
+```
+
+`ярлык` is 112 lines of `sh`, 56 of them code, and it holds **no list**: it asks
+the binary for the command string and runs it. The list itself is
+`ярлыки.flang` — a *program*, type-checked, with examples, whose
+`«Сколько ярлыков»` carries the count as a postcondition rather than as prose.
+The trick is the language's own (`ярлык` + `ярлыки.flang` in its tree), and the
+`Makefile` it replaces had no dependency and no timestamp rule in it — only
+`.PHONY` and a list of command strings.
+
+**Two of these did not exist as commands at all before.** `отказ` and `граница`
+lived only inside `.github/workflows/check.yml`; there was no way to run them
+on your own machine, so the two paragraphs of this README they back up had to be
+taken on trust. A check you cannot repeat is not a check.
 ```
 
 The plan, live:
@@ -172,16 +200,18 @@ failure: an empty `TERM` means there is nothing to promise colour with.
 
 ---
 
-## Diff against digitdisk
+## The diff: what it proved, and where it went
 
-**Reproduced by one command:** `./tools/sverka/run.sh`.
+**It is over, and it is not pretending otherwise.** The diff against digitdisk
+was a one-off argument — *this was rewritten correctly* — not a standing check.
+It never ran in CI, not once: the workflow of this repository has never invoked
+`tools/sverka/run.sh`.
 
-The script clones digitdisk itself at the pinned `7ea03ed` (0.5.0), emits layer
-1 to Go and puts the differ inside the `internal/ui` package — there is no other
-way to reach the unexported `detectDepth`. For every input it sets the process's
-real environment with `t.Setenv`/`os.Unsetenv` while handing flang the same
-triple of values. The clone is disposable and nothing is committed into
-digitdisk's tree.
+**Last run: 2 September 2026.** flang 0.6.2 (`bacde89`), digitdisk pinned at
+`7ea03ed` (0.5.0), Go 1.26.5, Linux. The differ went inside the `internal/ui`
+package — there is no other way to reach the unexported `detectDepth` — and for
+every input it set the process's real environment with
+`t.Setenv`/`os.Unsetenv` while handing flang the same triple of values.
 
 | Piece | Reference | Inputs | Divergences |
 |---|---|---:|---:|
@@ -195,6 +225,34 @@ The colour-depth grid walks the presence *and* the value of `NO_COLOR`, eleven
 `xterm-256color`, `screen-256color`, `xterm-direct`) and seven `COLORTERM`
 values (including `TrueColor` and `24BIT` — case matters), each in both the
 "set" and the "unset" variety.
+
+**How to re-run it, in full, today.** The differ was not deleted from history;
+it was deleted from the tree:
+
+```sh
+git show 2651911496218839ab249224153e311c51a0d138:tools/sverka/run.sh      > /tmp/run.sh
+git show 2651911496218839ab249224153e311c51a0d138:tools/sverka/env_test.go > /tmp/env_test.go
+```
+
+### What came back into the tree instead: 41 examples, taken from the reference
+
+The diff itself cannot be written in flang — flang has no way to call Go, and
+`пример` compares against a *written-down value*, not against another program.
+What can be carried across is the reference's answers, and they were:
+
+* `UsableTERM` (6 inputs) and `PaletteByName` (12) were small enough to carry
+  **entire**; the 384-input colour-depth grid gave 23 hand-picked rows — every
+  `TERM` value it walks, every `COLORTERM` value, `NO_COLOR` present-and-empty,
+  and the `dumb`-beats-`truecolor` case;
+* the **expected values were produced by digitdisk** on the pinned `7ea03ed`, by
+  a generator run once against that clone — not typed out by hand, and not read
+  off flang;
+* they were then put into `flang/env.flang` and run: **41 examples, 41 passed,
+  0 failed, first try.**
+
+**402 inputs became 41, and they run on every push instead of never.** An
+example pins a value; it does not notice if digitdisk changes. Nothing here
+claims otherwise.
 
 **Language parsing and number rules have NOTHING to diff against, and it is
 said out loud.** Go's `fmt` is locale-blind: digitdisk writes `2.4 ГиБ` with a
@@ -223,14 +281,22 @@ it on whatever inputs arrive. Numbers are `flang check --proof` output.
 
 | Module | Functions | All total | Claims | proved | grid | declared, not proved | Examples |
 |---|---:|---|---:|---:|---:|---:|---:|
-| Env (layer 1) | 25 | yes | 9 | 4 | 5 | 0 | 62 |
-| ReadEnv (the plan) | 7 own (+25 imported) | yes | 2 | — | — | — | 14 own (76 with imports) |
-| Licensing (the guard) | 21 | yes | 3 | — | — | — | 27 |
+| Env (layer 1) | 25 | yes | 9 | 4 | 5 | 0 | 103 |
+| ReadEnv (the plan) | 7 own (+25 imported) | yes | 2 | — | — | — | 14 own (117 with imports) |
+| Licensing (the guard) | 22 | yes | 3 | — | — | — | 30 |
+| Ярлыки (the shortcuts) | 5 | yes | 3 | — | — | — | 6 |
 
-No ledger is printed for the last two, and the binary explains why: the program
-declares a `план`, whose laws it does not judge, and an empty ledger section
-would read as "no laws declared" — which is false. Their claims are checked by
-examples and by running them, not by a ledger.
+No ledger is printed for the plan or the guard, and the binary explains why: the
+program declares a `план`, whose laws it does not judge, and an empty ledger
+section would read as "no laws declared" — which is false. Their claims are
+checked by examples and by running them, not by a ledger. That refusal is itself
+a check here: `./ярлык отказ` insists on exit code 2 *and* on the sentence
+explaining it.
+
+Layer 1's examples went from 62 to 103: 41 of them are the reference's answers,
+carried in when the differ left. Claims did not move — 9, of which 4 proved.
+Adding examples proves nothing, and the "grid" column grew for exactly that
+reason.
 
 ---
 
@@ -240,9 +306,14 @@ examples and by running them, not by a ledger.
 |---|---|---|
 | Go | emitted; `gofmt -l` empty, `go vet` clean, `go build` clean | **refused**, `FLANG_PLAN_UNSUPPORTED` |
 | C | emitted; `cc -std=c99 -Wall -Wextra -Werror -pedantic -O2 -flto`, **0 warnings about our code** | **refused**, `FLANG_PLAN_UNSUPPORTED` |
-| js | — | 2 files, 145,099 bytes |
+| js | — | **emitted**: 2 files, 145,099 bytes, exit code **3** |
 
-`cc (Ubuntu 15.2.0-16ubuntu1) 15.2.0`, Linux, flang 0.6.2, `make all` exiting 0.
+`cc (Ubuntu 15.2.0-16ubuntu1) 15.2.0`, Linux, flang 0.6.2, `./ярлык всё`
+exiting 0. The exit codes in the table are checked by `./ярлык граница`, which
+is in CI: go, c and rust must exit **1** with `FLANG_PLAN_UNSUPPORTED`, and js
+must exit **3** — "printed, but not everything was judged", because the binary
+does not judge a plan's laws. Three, not zero: that number was missing from this
+README until the check was written.
 A caveat, so that "zero warnings" is not a lie: the linker prints its own
 housekeeping line — `lto-wrapper: warning: using serial compilation of 2 LTRANS
 jobs`; that is about parallelising LTO, not about our code, and `-Werror` would
@@ -274,5 +345,6 @@ copy of the source with one line and emitting it with the same command.
 BSD-2-Clause (`LICENSE`; a Russian translation in `LICENSE-RU.md`). The tree is
 written from scratch; layer 1's behaviour is diffed against digitdisk through
 its open source, but not one line of anyone else's code is here. There is no
-Python and no JavaScript in this tree — one of the checks in
-`tools/licensing.flang`.
+Python, no JavaScript and no Go in this tree — one of the checks in
+`tools/licensing.flang`, and a second, deliberately dumb one over `git ls-files`
+in the CI workflow.
