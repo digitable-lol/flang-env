@@ -38,7 +38,7 @@ all: проверка печать план лицензии
 	@for m in $(МОДУЛИ); do \
 	  $(FLANG) emit flang/$$m.flang --target go --out out-go/$$m || exit 1; \
 	  grep -rl flangprogram out-go/$$m | while read f; do sed -i.bak "s|flangprogram|flang$$m|g" "$$f" && rm -f "$$f.bak"; done; \
-	  ( cd out-go/$$m && gofmt -l . && go vet ./... && go build ./... ) || exit 1; \
+	  ( cd out-go/$$m && test -z "$$(gofmt -l .)" && go vet ./... && go build ./... ) || exit 1; \
 	  $(FLANG) emit flang/$$m.flang --target c --out out-c/$$m || exit 1; \
 	  $(MAKE) -C out-c/$$m || exit 1; \
 	done

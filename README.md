@@ -55,6 +55,9 @@ $ flang emit flang/read-env.flang --target rust --out /tmp/x   → same refusal,
 $ flang emit flang/read-env.flang --target js   --out /tmp/x   → 2 files emitted, 145,099 bytes
 ```
 
+Exit codes: layer 1 emits to go and to c with **0** (eight runs in a row — the
+six modules of the sibling repository and «Env» here); the plan exits **1**.
+
 Two conclusions, both load-bearing.
 
 * **`js` is an EMIT TARGET, not the executor.** The plan is executed by
@@ -127,6 +130,11 @@ by empty output. This matters: `NO_COLOR` acts by its mere presence
 Plus the string plumbing without which none of it can be written: whitespace
 trimming, ASCII lowercasing, splitting on a character.
 
+`tools/sverka/` is the differ: a script plus one Go file that get dropped into a
+disposable clone of digitdisk. It is the only hand-written Go in the tree, and
+it is here so that anybody, not only their author, can re-check the numbers in
+this README.
+
 **A variable is a sum, not a string.** `вариант «Задано» с значение равным …`
 against `вариант «Не задано»`: an empty string and an absent variable are
 different things, and the type knows it. `NO_COLOR` is exactly why.
@@ -166,10 +174,14 @@ failure: an empty `TERM` means there is nothing to promise colour with.
 
 ## Diff against digitdisk
 
-Clone of digitdisk at `7ea03ed` (0.5.0); the differ lives inside the
-`internal/ui` package (there is no other way to reach the unexported
-`detectDepth`) and, for every input, sets the process's real environment with
-`t.Setenv`/`os.Unsetenv` while handing flang the same triple of values.
+**Reproduced by one command:** `./tools/sverka/run.sh`.
+
+The script clones digitdisk itself at the pinned `7ea03ed` (0.5.0), emits layer
+1 to Go and puts the differ inside the `internal/ui` package — there is no other
+way to reach the unexported `detectDepth`. For every input it sets the process's
+real environment with `t.Setenv`/`os.Unsetenv` while handing flang the same
+triple of values. The clone is disposable and nothing is committed into
+digitdisk's tree.
 
 | Piece | Reference | Inputs | Divergences |
 |---|---|---:|---:|
@@ -212,8 +224,8 @@ it on whatever inputs arrive. Numbers are `flang check --proof` output.
 | Module | Functions | All total | Claims | proved | grid | declared, not proved | Examples |
 |---|---:|---|---:|---:|---:|---:|---:|
 | Env (layer 1) | 25 | yes | 9 | 4 | 5 | 0 | 62 |
-| ReadEnv (the plan) | 8 own (+25 imported) | yes | 4 | — | — | — | 14 own (76 with imports) |
-| Licensing (the guard) | 21 | yes | 4 | — | — | — | 27 |
+| ReadEnv (the plan) | 7 own (+25 imported) | yes | 2 | — | — | — | 14 own (76 with imports) |
+| Licensing (the guard) | 21 | yes | 3 | — | — | — | 27 |
 
 No ledger is printed for the last two, and the binary explains why: the program
 declares a `план`, whose laws it does not judge, and an empty ledger section
