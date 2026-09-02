@@ -284,7 +284,7 @@ it on whatever inputs arrive. Numbers are `flang check --proof` output.
 | Env (layer 1) | 25 | yes | 9 | 4 | 5 | 0 | 103 |
 | ReadEnv (the plan) | 7 own (+25 imported) | yes | 2 | — | — | — | 14 own (117 with imports) |
 | Licensing (the guard) | 22 | yes | 3 | — | — | — | 30 |
-| Ярлыки (the shortcuts) | 5 | yes | 3 | — | — | — | 6 |
+| Ярлыки (the shortcuts) | 5 | yes | 4 | — | — | — | 6 |
 
 No ledger is printed for the plan or the guard, and the binary explains why: the
 program declares a `план`, whose laws it does not judge, and an empty ledger
