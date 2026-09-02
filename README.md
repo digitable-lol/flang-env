@@ -154,6 +154,7 @@ different things, and the type knows it. `NO_COLOR` is exactly why.
 brew install flang        # or: asdf plugin add flang
 # or from a clone of the language:  make -C bootstrap
 ```
+
 There is no `make` here any more:
 
 ```sh
@@ -179,7 +180,6 @@ The trick is the language's own (`ярлык` + `ярлыки.flang` in its tree
 lived only inside `.github/workflows/check.yml`; there was no way to run them
 on your own machine, so the two paragraphs of this README they back up had to be
 taken on trust. A check you cannot repeat is not a check.
-```
 
 The plan, live:
 
